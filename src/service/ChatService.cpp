@@ -50,14 +50,8 @@ std::vector<chat_message_row> ChatService::getHistory(const std::string& usernam
     return conn->query_s<chat_message_row>("username=? and session_id=? order by id asc limit ? offset ?", user, sid, limit, offset);
 }
 
-std::string ChatService::sendMessage(const std::string& username,
-                                    const std::string& sessionId,
-                                    const std::string& question,
-                                    const std::string& modelType) {
+std::string ChatService::sendMessage( const std::string& question,const std::string& modelType) {
                                         
     std::string response = "这是来自模型 [" + modelType + "] 的回复。你刚才问了: " + question;
-    if (!username.empty() && !sessionId.empty()) {
-        response += "\n\n(user=" + username + ", session=" + sessionId + ")";
-    }
     return response;
 }

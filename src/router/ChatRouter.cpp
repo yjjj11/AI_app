@@ -25,6 +25,13 @@ void ChatRouter::registerRoutes(hv::HttpService& service) {
         return 200;
     });
 
+    service.GET("/ai.html", [](HttpRequest*, HttpResponse* resp) {
+        const std::string html = readTextFile("/root/my_ai_app/src/resource/ai.html");
+        resp->content_type = TEXT_HTML;
+        resp->body = html.empty() ? "<html><body>ai.html not found</body></html>" : html;
+        return 200;
+    });
+
     service.POST("/chat/session/new", [this](HttpRequest* req, HttpResponse* resp) {
         req->ParseBody();
         const std::string username = req->GetHeader("X-Auth-User");
@@ -78,7 +85,8 @@ void ChatRouter::registerRoutes(hv::HttpService& service) {
         std::string question = req->GetString("question");
         std::string modelType = req->GetString("modelType");
 
-        std::string ai_response = chat_service_.sendMessage(username, sessionId, question, modelType);
+        // std::cout<<"[ChatRouter] 收到消息："<<question<<std::endl;
+        std::string ai_response = chat_service_.sendMessage(question, modelType);
 
         const int64_t ts = nowMs();
         ChatMySqlStore::instance().enqueue(chat_message_row{

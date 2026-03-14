@@ -61,7 +61,7 @@ void MyHttpServer::setupMiddleware() {
     });
 
     service_.Use([](HttpRequest* req, HttpResponse* resp) {
-        if (req->path == "/" || req->path == "/health") {
+        if (req->path == "/" || req->path == "/login" || req->path == "/health") {
             return HTTP_STATUS_NEXT;
         }
 
@@ -78,7 +78,7 @@ void MyHttpServer::setupMiddleware() {
         if (token.empty()) {
             if (req->path == "/" || req->path == "/ai.html") {
                 resp->status_code = HTTP_STATUS_FOUND;
-                resp->SetHeader("Location", "/login");
+                resp->SetHeader("Location", "/");
                 return 302;
             }
             resp->status_code = HTTP_STATUS_UNAUTHORIZED;
@@ -90,7 +90,7 @@ void MyHttpServer::setupMiddleware() {
         if (username.empty()) {
             if (req->path == "/" || req->path == "/ai.html") {
                 resp->status_code = HTTP_STATUS_FOUND;
-                resp->SetHeader("Location", "/login");
+                resp->SetHeader("Location", "/");
                 return 302;
             }
             resp->status_code = HTTP_STATUS_UNAUTHORIZED;

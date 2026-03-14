@@ -13,10 +13,7 @@ public:
     std::vector<chat_session_row> listSessions(const std::string& username, int limit);
     std::vector<chat_message_row> getHistory(const std::string& username, const std::string& sessionId, int limit, int offset);
 
-    std::string sendMessage(const std::string& username,
-                            const std::string& sessionId,
-                            const std::string& question,
-                            const std::string& modelType);
+    std::string sendMessage(  const std::string& question, const std::string& modelType);
 };
 
 #endif

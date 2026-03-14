@@ -32,7 +32,14 @@ void LoginRouter::registerRoutes(hv::HttpService& service) {
         }
 
         resp->SetHeader("Set-Cookie", "token=" + token + "; Path=/; HttpOnly; SameSite=Lax");
-        resp->json = {{"success", true}};
-        return 200;
+        const std::string ct = req->GetHeader("Content-Type");
+        if (ct.find("application/json") != std::string::npos) {
+            resp->json = {{"success", true}, {"redirect", "/ai.html"}};
+            return 200;
+        }
+
+        resp->status_code = HTTP_STATUS_FOUND;
+        resp->SetHeader("Location", "/ai.html");
+        return 302;
     });
 }

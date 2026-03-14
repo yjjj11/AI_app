@@ -1,6 +1,7 @@
 #include "service/ChatMySqlStore.h"
 
 #include <cstdlib>
+#include <iostream>
 #include <optional>
 #include <stdexcept>
 
@@ -54,15 +55,27 @@ void ChatMySqlStore::init() {
     const std::optional<int> port = getenvInt("MYSQL_PORT").value_or(3306);
     const int pool_size = getenvInt("MYSQL_POOL_SIZE").value_or(4);
 
+
+    // std::cout << "\n[ChatMySqlStore] 读取到MySQL连接参数：" << std::endl;
+    //     std::cout << "  主机: " << host << std::endl;
+    //     std::cout << "  端口: " << port.value() << std::endl;
+    //     std::cout << "  用户: " << user << std::endl;
+    //     std::cout << "  数据库: " << db << std::endl;
+    //     std::cout << "  超时时间: " << timeout.value() << "s" << std::endl;
+    //     std::cout << "  连接池大小: " << pool_size << std::endl;
+    //     std::cout << "  密码: " << (passwd.empty() ? "空" : "已设置") << std::endl;
+
     try {
         auto& pool = ormpp::connection_pool<Db>::instance();
+        std::cout << "\n[ChatMySqlStore] 开始初始化MySQL连接池..." << std::endl;
         pool.init(pool_size, host, user, passwd, db, timeout, port);
 
         {
             auto conn = pool.get();
             if (!conn) throw std::runtime_error("mysql connect failed");
-            conn->create_datatable<chat_session_row>(ormpp_auto_key{"id"});
-            conn->create_datatable<chat_message_row>(ormpp_auto_key{"id"});
+             std::cout << "[ChatMySqlStore] MySQL连接成功！" << std::endl;
+            auto res1=conn->create_datatable<chat_session_row>(ormpp_auto_key{"id"});
+            auto res2=conn->create_datatable<chat_message_row>(ormpp_auto_key{"id"});
         }
 
         startWorker();
@@ -79,6 +92,8 @@ void ChatMySqlStore::enqueue(chat_message_row task) {
     {
         std::lock_guard<std::mutex> lock(mutex_);
         queue_.push_back(std::move(task));
+        const auto& queued = queue_.back();
+        // std::cout << "[ChatMySqlStore] 入队消息：" << queued.role << ", " << queued.model << ", " << queued.content << std::endl;
     }
     cv_.notify_one();
 }
@@ -98,6 +113,9 @@ void ChatMySqlStore::workerLoop() {
 
         auto conn = pool.get();
         if (!conn) continue;
-        conn->insert(task);
+        auto res=conn->insert(task);
+        if (!res) {
+            std::cerr << "[ChatMySqlStore] 插入消息失败！" << std::endl;
+        }
     }
 }

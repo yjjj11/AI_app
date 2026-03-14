@@ -9,15 +9,15 @@
 <body class="min-h-screen bg-gray-50 flex items-center justify-center p-6">
   <div class="w-full max-w-md bg-white rounded-2xl shadow p-6 border border-gray-200">
     <div class="text-xl font-semibold text-gray-900">AI Assistant 登录</div>
-    <div class="text-sm text-gray-500 mt-1">输入用户名即可开始</div>
+    <div class="text-sm text-gray-500 mt-1">使用 admin / 123456 登录</div>
     <form id="f" class="mt-6 space-y-4">
       <div>
         <label class="block text-sm font-medium text-gray-700">用户名</label>
-        <input id="u" class="mt-1 w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="例如：alice" required />
+        <input id="u" class="mt-1 w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="admin" required />
       </div>
       <div>
         <label class="block text-sm font-medium text-gray-700">密码</label>
-        <input id="p" type="password" class="mt-1 w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="可留空" />
+        <input id="p" type="password" class="mt-1 w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="123456" />
       </div>
       <button class="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl py-3 font-medium" type="submit">登录</button>
       <div id="err" class="text-sm text-red-600 hidden"></div>
@@ -41,7 +41,7 @@
       });
       const data = await resp.json().catch(() => ({}));
       if (data && data.success) {
-        window.location.href = '/';
+        window.location.href = '/ai.html';
         return;
       }
       err.textContent = (data && data.msg) ? data.msg : '登录失败';
