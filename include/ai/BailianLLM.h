@@ -1,0 +1,20 @@
+#ifndef AI_BAILIAN_LLM_H
+#define AI_BAILIAN_LLM_H
+
+#include "ai/LLM.h"
+
+#include <string>
+
+class BailianLLM final : public LLM {
+public:
+    BailianLLM(std::string api_key, std::string base_url, std::string default_model, int timeout_seconds);
+    std::string chat(const std::string& prompt, const std::string& model_type) override;
+
+private:
+    std::string api_key_;
+    std::string base_url_;
+    std::string default_model_;
+    int timeout_seconds_{30};
+};
+
+#endif

@@ -17,21 +17,34 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
     ${CMAKE_SOURCE_DIR}/compile_commands.json
 )
 
-# Find libhv
-find_path(HV_INCLUDE_DIR hv/hv.h)
-find_library(HV_LIBRARY hv)
-
-if(NOT HV_INCLUDE_DIR OR NOT HV_LIBRARY)
-    message(FATAL_ERROR "libhv not found! Please install it first.")
-endif()
+option(USE_BUNDLED_LIBHV "Build libhv from third_party/libhv" ON)
 
 # Include directories
-include_directories(${HV_INCLUDE_DIR})
 include_directories(include)
 include_directories(third_party/jwt-cpp/include)
 include_directories(third_party/ormpp)
 include_directories(third_party/ormpp/ormpp)
 include_directories(third_party/ormpp/iguana)
+
+if(USE_BUNDLED_LIBHV)
+    set(BUILD_SHARED ON CACHE BOOL "" FORCE)
+    set(BUILD_STATIC OFF CACHE BOOL "" FORCE)
+    set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+    set(BUILD_UNITTEST OFF CACHE BOOL "" FORCE)
+    set(WITH_OPENSSL ON CACHE BOOL "" FORCE)
+    set(WITH_HTTP ON CACHE BOOL "" FORCE)
+    set(WITH_HTTP_SERVER ON CACHE BOOL "" FORCE)
+    set(WITH_HTTP_CLIENT ON CACHE BOOL "" FORCE)
+    add_subdirectory(third_party/libhv EXCLUDE_FROM_ALL)
+    include_directories(third_party/libhv/include)
+else()
+    find_path(HV_INCLUDE_DIR hv/hv.h)
+    find_library(HV_LIBRARY hv)
+    if(NOT HV_INCLUDE_DIR OR NOT HV_LIBRARY)
+        message(FATAL_ERROR "libhv not found! Please install it first.")
+    endif()
+    include_directories(${HV_INCLUDE_DIR})
+endif()
 
 set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(BUILD_UNIT_TESTS OFF CACHE BOOL "" FORCE)
@@ -46,6 +59,8 @@ set(SOURCE_FILES
     src/main.cpp 
     src/HttpServer.cpp
     src/config/Dotenv.cpp
+    src/ai/LLMFactory.cpp
+    src/ai/BailianLLM.cpp
     src/service/LoginService.cpp
     src/router/LoginRouter.cpp
     src/service/ChatService.cpp
@@ -57,5 +72,21 @@ add_executable(app ${SOURCE_FILES})
 
 # Link libraries (add crypto for JWT)
 target_compile_definitions(app PRIVATE ORMPP_ENABLE_MYSQL)
-target_link_libraries(app ${HV_LIBRARY} crypto mysqlclient)
+if(USE_BUNDLED_LIBHV)
+    target_link_libraries(app hv crypto mysqlclient)
+else()
+    target_link_libraries(app ${HV_LIBRARY} crypto mysqlclient)
+endif()
 set_target_properties(app PROPERTIES LINK_FLAGS "-Wl,-z,muldefs")
+
+add_executable(bailian_smoketest
+    src/ai/bailian_smoketest.cpp
+    src/config/Dotenv.cpp
+    src/ai/LLMFactory.cpp
+    src/ai/BailianLLM.cpp
+)
+if(USE_BUNDLED_LIBHV)
+    target_link_libraries(bailian_smoketest hv crypto)
+else()
+    target_link_libraries(bailian_smoketest ${HV_LIBRARY} crypto)
+endif()

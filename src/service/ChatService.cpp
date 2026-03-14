@@ -1,5 +1,7 @@
 #include "service/ChatService.h"
 
+#include "ai/LLMFactory.h"
+
 #include "ormpp/connection_pool.hpp"
 
 std::string ChatService::createSession(const std::string& username, const std::string& title) {
@@ -51,7 +53,12 @@ std::vector<chat_message_row> ChatService::getHistory(const std::string& usernam
 }
 
 std::string ChatService::sendMessage( const std::string& question,const std::string& modelType) {
-                                        
-    std::string response = "这是来自模型 [" + modelType + "] 的回复。你刚才问了: " + question;
-    return response;
+    static std::unique_ptr<LLM> llm = LLMFactory::create();
+    if (!llm) {
+        return "LLM not configured";
+    }
+    
+    const std::string out = llm->chat(question, "qwen-plus");
+    if (out.empty()) return "LLM request failed";
+    return out;
 }

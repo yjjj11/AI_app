@@ -11,8 +11,7 @@
 
 - CMake >= 3.10
 - C++20 编译器
-- libhv（系统已安装并可被 `find_path/find_library` 找到）
-- OpenSSL（用于 crypto）
+- OpenSSL（用于 HTTPS 请求）
 - MySQL client（`libmysqlclient` 以及头文件）
 
 ## 配置
@@ -20,13 +19,24 @@
 项目启动时会读取：
 
 - `/root/my_ai_app/config/mysql.env`
+- `/root/my_ai_app/config/ai.env`
 
-字段示例见 [mysql.env.example](file:///root/my_ai_app/config/mysql.env.example)。
+参考模板：
+
+- [mysql.env.template](file:///root/my_ai_app/config/mysql.env.template)
+- [ai.env.template](file:///root/my_ai_app/config/ai.env.template)
 
 ## 构建
 
 ```bash
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+cmake --build build -j
+```
+
+默认会从 `third_party/libhv` 构建 libhv，并启用 OpenSSL（支持 HTTPS）。如需改用系统 libhv：
+
+```bash
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DUSE_BUNDLED_LIBHV=OFF
 cmake --build build -j
 ```
 
