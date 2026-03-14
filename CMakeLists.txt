@@ -27,8 +27,8 @@ include_directories(third_party/ormpp/ormpp)
 include_directories(third_party/ormpp/iguana)
 
 if(USE_BUNDLED_LIBHV)
-    set(BUILD_SHARED ON CACHE BOOL "" FORCE)
-    set(BUILD_STATIC OFF CACHE BOOL "" FORCE)
+    set(BUILD_SHARED OFF CACHE BOOL "" FORCE)
+    set(BUILD_STATIC ON CACHE BOOL "" FORCE)
     set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
     set(BUILD_UNITTEST OFF CACHE BOOL "" FORCE)
     set(WITH_OPENSSL ON CACHE BOOL "" FORCE)
@@ -73,20 +73,35 @@ add_executable(app ${SOURCE_FILES})
 # Link libraries (add crypto for JWT)
 target_compile_definitions(app PRIVATE ORMPP_ENABLE_MYSQL)
 if(USE_BUNDLED_LIBHV)
-    target_link_libraries(app hv crypto mysqlclient)
+    target_link_libraries(app hv_static crypto mysqlclient)
 else()
     target_link_libraries(app ${HV_LIBRARY} crypto mysqlclient)
 endif()
 set_target_properties(app PROPERTIES LINK_FLAGS "-Wl,-z,muldefs")
 
 add_executable(bailian_smoketest
-    src/ai/bailian_smoketest.cpp
+    test/bailian_smoketest.cpp
     src/config/Dotenv.cpp
     src/ai/LLMFactory.cpp
     src/ai/BailianLLM.cpp
 )
 if(USE_BUNDLED_LIBHV)
-    target_link_libraries(bailian_smoketest hv crypto)
+    target_link_libraries(bailian_smoketest hv_static crypto)
 else()
     target_link_libraries(bailian_smoketest ${HV_LIBRARY} crypto)
 endif()
+
+add_executable(sendmessage_smoketest
+    test/sendmessage_smoketest.cpp
+    src/config/Dotenv.cpp
+    src/ai/LLMFactory.cpp
+    src/ai/BailianLLM.cpp
+    src/service/ChatService.cpp
+)
+target_compile_definitions(sendmessage_smoketest PRIVATE ORMPP_ENABLE_MYSQL)
+if(USE_BUNDLED_LIBHV)
+    target_link_libraries(sendmessage_smoketest hv_static crypto mysqlclient)
+else()
+    target_link_libraries(sendmessage_smoketest ${HV_LIBRARY} crypto mysqlclient)
+endif()
+set_target_properties(sendmessage_smoketest PROPERTIES LINK_FLAGS "-Wl,-z,muldefs")
