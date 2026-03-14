@@ -1,0 +1,13 @@
+build/
+bin/
+compile_commands.json
+
+.cache/
+*.log
+
+.vscode/
+.idea/
+.DS_Store
+
+
+third_party/**/.git/

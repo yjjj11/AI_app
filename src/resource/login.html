@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>登录</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+  <div class="w-full max-w-md bg-white rounded-2xl shadow p-6 border border-gray-200">
+    <div class="text-xl font-semibold text-gray-900">AI Assistant 登录</div>
+    <div class="text-sm text-gray-500 mt-1">输入用户名即可开始</div>
+    <form id="f" class="mt-6 space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700">用户名</label>
+        <input id="u" class="mt-1 w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="例如：alice" required />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700">密码</label>
+        <input id="p" type="password" class="mt-1 w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="可留空" />
+      </div>
+      <button class="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl py-3 font-medium" type="submit">登录</button>
+      <div id="err" class="text-sm text-red-600 hidden"></div>
+    </form>
+  </div>
+  <script>
+    const f = document.getElementById('f');
+    const u = document.getElementById('u');
+    const p = document.getElementById('p');
+    const err = document.getElementById('err');
+    f.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      err.classList.add('hidden');
+      const username = (u.value || '').trim();
+      const password = (p.value || '');
+      if (!username) return;
+      const resp = await fetch('/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await resp.json().catch(() => ({}));
+      if (data && data.success) {
+        window.location.href = '/';
+        return;
+      }
+      err.textContent = (data && data.msg) ? data.msg : '登录失败';
+      err.classList.remove('hidden');
+    });
+  </script>
+</body>
+</html>
