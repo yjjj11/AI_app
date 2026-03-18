@@ -1,9 +1,11 @@
 #include "router/ChatRouter.h"
 #include "service/ChatMySqlStore.h"
+#include "ai/LLMFactory.h"
 
 #include <chrono>
 #include <fstream>
 #include <sstream>
+#include <string_view>
 
 static int64_t nowMs() {
     return std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -78,38 +80,109 @@ void ChatRouter::registerRoutes(hv::HttpService& service) {
         return 200;
     });
 
-    service.POST("/chat/send", [this](HttpRequest* req, HttpResponse* resp) {
+    service.POST("/chat/send", [this](const ::HttpRequestPtr& req, const ::HttpResponseWriterPtr& writer) {
         req->ParseBody();
         std::string username = req->GetHeader("X-Auth-User");
-        std::string sessionId = req->GetString("sessionId");
-        std::string question = req->GetString("question");
-        std::string modelType = req->GetString("modelType");
+        std::string sessionId;
+        std::string question;
+        std::vector<std::string> images;
 
-        // std::cout<<"[ChatRouter] 收到消息："<<question<<std::endl;
-        std::string ai_response = chat_service_.sendMessage(question, modelType);
+        hv::Json body;
+        if (!req->body.empty()) {
+            body = hv::Json::parse(req->body, nullptr, false);
+        }
+        if (body.is_object()) {
+            if (body.contains("sessionId") && body["sessionId"].is_string()) sessionId = body["sessionId"].get<std::string>();
+            if (body.contains("question") && body["question"].is_string()) question = body["question"].get<std::string>();
+            if (body.contains("images") && body["images"].is_array()) {
+                const auto& arr = body["images"];
+                const size_t n = std::min<size_t>(arr.size(), 4);
+                images.reserve(n);
+                for (size_t i = 0; i < n; i++) {
+                    if (!arr[i].is_string()) continue;
+                    std::string s = arr[i].get<std::string>();
+                    if (s.size() > 2 * 1024 * 1024) continue;
+                    images.push_back(std::move(s));
+                }
+            }
+        } else {
+            sessionId = req->GetString("sessionId");
+            question = req->GetString("question");
+        }
 
-        const int64_t ts = nowMs();
+        if (username.empty()) username = "unknown";
+        if (sessionId.empty()) sessionId = "default";
+        const std::string modelKey = LLMFactory::getActiveKey().empty() ? "default" : LLMFactory::getActiveKey();
+
+        writer->Begin();
+        writer->WriteStatus(HTTP_STATUS_OK);
+        writer->WriteHeader("Content-Type", "text/event-stream");
+        writer->WriteHeader("Cache-Control", "no-cache");
+        writer->WriteHeader("Connection", "keep-alive");
+        writer->EndHeaders();
+
+        if (!images.empty()) {
+            bool supports_vision = false;
+            for (const auto& p : LLMFactory::listProfiles()) {
+                if (p.key == modelKey) {
+                    supports_vision = p.capabilities.vision;
+                    break;
+                }
+            }
+            if (!supports_vision) {
+                hv::Json payload;
+                payload["error"] = "当前模型不支持图片输入，请切换到支持多模态的模型或移除图片后再发送。";
+                writer->SSEvent(payload.dump(), "error");
+                writer->End();
+                return;
+            }
+        }
+
+        const int64_t ts_user = nowMs();
         ChatMySqlStore::instance().enqueue(chat_message_row{
-            username, 
-            "user", 
-            modelType, 
-            question,  
-            ts,
+            username,
+            "user",
+            modelKey,
+            question,
+            ts_user,
             sessionId
         });
+
+        std::string aggregated;
+        const std::string out = chat_service_.streamMessage(
+            question,
+            images,
+            [&](std::string_view delta) {
+                hv::Json payload;
+                payload["delta"] = std::string(delta);
+                writer->SSEvent(payload.dump(), "delta");
+                aggregated.append(delta.data(), delta.size());
+            }
+        );
+
+        if (aggregated.empty() && out.empty()) {
+            hv::Json payload;
+            payload["error"] = "LLM request failed";
+            writer->SSEvent(payload.dump(), "error");
+            writer->End();
+            return;
+        }
+
+        const std::string final_text = !aggregated.empty() ? aggregated : out;
+        const int64_t ts_ai = nowMs();
         ChatMySqlStore::instance().enqueue(chat_message_row{
-            username, 
-            "assistant", 
-            modelType, 
-            ai_response,  
-            ts,
+            username,
+            "assistant",
+            modelKey,
+            final_text,
+            ts_ai,
             sessionId
         });
 
-        resp->json = {
-            {"success", true},
-            {"Information", ai_response}
-        };
-        return 200;
+        hv::Json payload;
+        payload["done"] = true;
+        payload["len"] = (int)final_text.size();
+        writer->SSEvent(payload.dump(), "done");
+        writer->End();
     });
 }

@@ -4,6 +4,25 @@
 
 #include "ormpp/connection_pool.hpp"
 
+#include <hv/HttpService.h>
+
+static hv::Json buildUserMessages(const std::string& question, const std::vector<std::string>& imageDataUrls) {
+    hv::Json messages = hv::Json::array();
+    if (imageDataUrls.empty()) {
+        messages.push_back({{"role", "user"}, {"content", question}});
+        return messages;
+    }
+
+    hv::Json content = hv::Json::array();
+    content.push_back({{"type", "text"}, {"text", question}});
+    for (const auto& url : imageDataUrls) {
+        if (url.empty()) continue;
+        content.push_back({{"type", "image_url"}, {"image_url", {{"url", url}}}});
+    }
+    messages.push_back({{"role", "user"}, {"content", content}});
+    return messages;
+}
+
 std::string ChatService::createSession(const std::string& username, const std::string& title) {
     auto& pool = ormpp::connection_pool<Db>::instance();
     auto conn = pool.get();
@@ -52,13 +71,15 @@ std::vector<chat_message_row> ChatService::getHistory(const std::string& usernam
     return conn->query_s<chat_message_row>("username=? and session_id=? order by id asc limit ? offset ?", user, sid, limit, offset);
 }
 
-std::string ChatService::sendMessage( const std::string& question,const std::string& modelType) {
-    static std::unique_ptr<LLM> llm = LLMFactory::create();
+std::string ChatService::streamMessage(const std::string& question,
+                                       const std::vector<std::string>& imageDataUrls,
+                                       const std::function<void(std::string_view)>& on_delta) {
+    const std::string key = LLMFactory::getActiveKey();
+    auto llm = LLMFactory::get(key.empty() ? "default" : key);
     if (!llm) {
-        return "LLM not configured";
+        return "";
     }
-    
-    const std::string out = llm->chat(question, "qwen-plus");
-    if (out.empty()) return "LLM request failed";
+    const auto messages = buildUserMessages(question, imageDataUrls);
+    const std::string out = llm->stream_chat_messages(messages, on_delta);
     return out;
 }

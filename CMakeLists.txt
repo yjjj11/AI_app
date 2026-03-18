@@ -21,6 +21,7 @@ option(USE_BUNDLED_LIBHV "Build libhv from third_party/libhv" ON)
 
 # Include directories
 include_directories(include)
+include_directories(third_party/cpp-httplib)
 include_directories(third_party/jwt-cpp/include)
 include_directories(third_party/ormpp)
 include_directories(third_party/ormpp/ormpp)
@@ -64,18 +65,21 @@ set(SOURCE_FILES
     src/service/LoginService.cpp
     src/router/LoginRouter.cpp
     src/service/ChatService.cpp
+    src/service/SettingService.cpp
     src/service/ChatMySqlStore.cpp
     src/router/ChatRouter.cpp
+    src/router/SettingRouter.cpp
 )
 
 add_executable(app ${SOURCE_FILES})
 
 # Link libraries (add crypto for JWT)
 target_compile_definitions(app PRIVATE ORMPP_ENABLE_MYSQL)
+target_compile_definitions(app PRIVATE CPPHTTPLIB_OPENSSL_SUPPORT)
 if(USE_BUNDLED_LIBHV)
-    target_link_libraries(app hv_static crypto mysqlclient)
+    target_link_libraries(app hv_static ssl crypto mysqlclient)
 else()
-    target_link_libraries(app ${HV_LIBRARY} crypto mysqlclient)
+    target_link_libraries(app ${HV_LIBRARY} ssl crypto mysqlclient)
 endif()
 set_target_properties(app PROPERTIES LINK_FLAGS "-Wl,-z,muldefs")
 
@@ -85,10 +89,11 @@ add_executable(bailian_smoketest
     src/ai/LLMFactory.cpp
     src/ai/BailianLLM.cpp
 )
+target_compile_definitions(bailian_smoketest PRIVATE CPPHTTPLIB_OPENSSL_SUPPORT)
 if(USE_BUNDLED_LIBHV)
-    target_link_libraries(bailian_smoketest hv_static crypto)
+    target_link_libraries(bailian_smoketest hv_static ssl crypto)
 else()
-    target_link_libraries(bailian_smoketest ${HV_LIBRARY} crypto)
+    target_link_libraries(bailian_smoketest ${HV_LIBRARY} ssl crypto)
 endif()
 
 add_executable(sendmessage_smoketest
@@ -99,9 +104,37 @@ add_executable(sendmessage_smoketest
     src/service/ChatService.cpp
 )
 target_compile_definitions(sendmessage_smoketest PRIVATE ORMPP_ENABLE_MYSQL)
+target_compile_definitions(sendmessage_smoketest PRIVATE CPPHTTPLIB_OPENSSL_SUPPORT)
 if(USE_BUNDLED_LIBHV)
-    target_link_libraries(sendmessage_smoketest hv_static crypto mysqlclient)
+    target_link_libraries(sendmessage_smoketest hv_static ssl crypto mysqlclient)
 else()
-    target_link_libraries(sendmessage_smoketest ${HV_LIBRARY} crypto mysqlclient)
+    target_link_libraries(sendmessage_smoketest ${HV_LIBRARY} ssl crypto mysqlclient)
 endif()
 set_target_properties(sendmessage_smoketest PROPERTIES LINK_FLAGS "-Wl,-z,muldefs")
+
+add_executable(llm_factory_smoketest
+    test/llm_factory_smoketest.cpp
+    src/config/Dotenv.cpp
+    src/ai/LLMFactory.cpp
+    src/ai/BailianLLM.cpp
+)
+target_compile_definitions(llm_factory_smoketest PRIVATE CPPHTTPLIB_OPENSSL_SUPPORT)
+if(USE_BUNDLED_LIBHV)
+    target_link_libraries(llm_factory_smoketest hv_static ssl crypto)
+else()
+    target_link_libraries(llm_factory_smoketest ${HV_LIBRARY} ssl crypto)
+endif()
+
+add_executable(model_switch_smoketest
+    test/model_switch_smoketest.cpp
+    src/config/Dotenv.cpp
+    src/ai/LLMFactory.cpp
+    src/ai/BailianLLM.cpp
+    src/service/SettingService.cpp
+)
+target_compile_definitions(model_switch_smoketest PRIVATE CPPHTTPLIB_OPENSSL_SUPPORT)
+if(USE_BUNDLED_LIBHV)
+    target_link_libraries(model_switch_smoketest hv_static ssl crypto)
+else()
+    target_link_libraries(model_switch_smoketest ${HV_LIBRARY} ssl crypto)
+endif()

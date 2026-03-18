@@ -3,7 +3,9 @@
 
 #include "service/ChatDbModels.h"
 
+#include <functional>
 #include <string>
+#include <string_view>
 #include <vector>
 
 class ChatService {
@@ -13,7 +15,9 @@ public:
     std::vector<chat_session_row> listSessions(const std::string& username, int limit);
     std::vector<chat_message_row> getHistory(const std::string& username, const std::string& sessionId, int limit, int offset);
 
-    std::string sendMessage(  const std::string& question, const std::string& modelType);
+    std::string streamMessage(const std::string& question,
+                              const std::vector<std::string>& imageDataUrls,
+                              const std::function<void(std::string_view)>& on_delta);
 };
 
 #endif

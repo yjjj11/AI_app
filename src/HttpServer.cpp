@@ -7,6 +7,7 @@
 
 #include "router/ChatRouter.h"
 #include "router/LoginRouter.h"
+#include "router/SettingRouter.h"
 #include "service/ChatMySqlStore.h"
 
 #include <jwt-cpp/jwt.h>
@@ -61,7 +62,7 @@ void MyHttpServer::setupMiddleware() {
     });
 
     service_.Use([](HttpRequest* req, HttpResponse* resp) {
-        if (req->path == "/" || req->path == "/login" || req->path == "/health") {
+        if (req->path == "/" || req->path == "/login" || req->path == "/health" || req->path.rfind("/assets/", 0) == 0) {
             return HTTP_STATUS_NEXT;
         }
 
@@ -76,7 +77,7 @@ void MyHttpServer::setupMiddleware() {
         }
 
         if (token.empty()) {
-            if (req->path == "/" || req->path == "/ai.html") {
+            if (req->path == "/" || req->path == "/ai.html" || req->path == "/settings.html") {
                 resp->status_code = HTTP_STATUS_FOUND;
                 resp->SetHeader("Location", "/");
                 return 302;
@@ -88,7 +89,7 @@ void MyHttpServer::setupMiddleware() {
 
         std::string username = verifyJwtAndGetUser(token);
         if (username.empty()) {
-            if (req->path == "/" || req->path == "/ai.html") {
+            if (req->path == "/" || req->path == "/ai.html" || req->path == "/settings.html") {
                 resp->status_code = HTTP_STATUS_FOUND;
                 resp->SetHeader("Location", "/");
                 return 302;
@@ -106,6 +107,7 @@ void MyHttpServer::setupMiddleware() {
 void MyHttpServer::registerRoutes() {
     routers_.emplace_back(std::make_unique<LoginRouter>());
     routers_.emplace_back(std::make_unique<ChatRouter>());
+    routers_.emplace_back(std::make_unique<SettingRouter>());
 
     for (auto& router : routers_) {
         router->registerRoutes(service_);

@@ -5,7 +5,10 @@
 #include <iostream>
 
 int main() {
-    Dotenv::loadFromFile("/root/my_ai_app/config/ai.env");
+    if (!LLMFactory::loadProfilesFromFile("/root/my_ai_app/config/llm_profiles.json")) {
+        std::cout << "profiles_file_missing=true\n";
+        return 0;
+    }
 
     auto llm = LLMFactory::create();
     if (!llm) {
@@ -13,18 +16,16 @@ int main() {
         return 2;
     }
 
-    const std::string model = []() {
-        const char* v = std::getenv("BAILIAN_DEFAULT_MODEL");
-        return (v && *v) ? std::string(v) : std::string("qwen-plus");
-    }();
-
-    const std::string out = llm->chat("ping", model);
-    if (out.empty()) {
-        std::cerr << "LLM chat failed (empty response)\n";
-        return 1;
-    }
-
-    std::cout << out << "\n";
+    std::cout << "\n--- stream_chat ---\n";
+    hv::Json messages = hv::Json::array();
+    messages.push_back({{"role", "user"}, {"content", "请用一句话解释什么是 SSE。"}});
+    const std::string streamed = llm->stream_chat_messages(
+        messages,
+        [](std::string_view chunk) {
+            std::cout << chunk;
+            std::cout.flush();
+        }
+    );
+    std::cout << "\n\n--- stream_chat done, total_len=" << streamed.size() << " ---\n";
     return 0;
 }
-

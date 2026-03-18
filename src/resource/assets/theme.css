@@ -1,0 +1,58 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --tone-bg-a: #0b1020;
+  --tone-bg-b: #121a33;
+  --tone-bg-c: #1b2a4a;
+  --tone-card: rgba(25, 30, 40, 0.88);
+  --tone-border: rgba(255, 255, 255, 0.12);
+  --tone-text: rgba(255, 255, 255, 0.92);
+  --tone-muted: rgba(255, 255, 255, 0.68);
+  --tone-dim: rgba(255, 255, 255, 0.46);
+}
+
+body.theme {
+  font-family: 'Inter', "Microsoft YaHei", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  color: var(--tone-text);
+  background: linear-gradient(135deg, var(--tone-bg-a), var(--tone-bg-b), var(--tone-bg-c));
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+.particles {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.particle {
+  position: absolute;
+  border-radius: 9999px;
+  animation: float 15s infinite linear;
+  filter: blur(0.2px);
+  opacity: 0.35;
+}
+
+@keyframes float {
+  0% { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(-110vh) translateX(120px) rotate(360deg); opacity: 0; }
+}
+
+.tone-card {
+  background: var(--tone-card);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--tone-border);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+}
+
+.tone-border {
+  border-color: var(--tone-border) !important;
+}
+
+.tone-text { color: var(--tone-text) !important; }
+.tone-muted { color: var(--tone-muted) !important; }
+.tone-dim { color: var(--tone-dim) !important; }
+

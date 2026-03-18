@@ -4,21 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI 智能助手 | libhv Service</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.0/dist/purify.min.js"></script>
+    <link rel="stylesheet" href="/assets/theme.css">
+    <script src="/assets/theme.js"></script>
     
     <style>
         body {
             font-family: 'Inter', "Microsoft YaHei", sans-serif;
-            background: #f3f4f6;
+            overflow: hidden;
         }
         .glass {
-            background: rgba(255, 255, 255, 0.8);
+            background: rgba(17, 24, 39, 0.6);
             backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            border: 1px solid rgba(31, 41, 55, 0.8);
         }
         .message-bubble {
             max-width: 85%;
@@ -30,10 +33,42 @@
             border-bottom-right-radius: 4px;
         }
         .message-ai {
-            background: white;
-            color: #1f2937;
+            background: rgba(25, 30, 40, 0.92);
+            color: rgba(255, 255, 255, 0.92);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            backdrop-filter: blur(10px);
             border-bottom-left-radius: 4px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 12px 24px -16px rgba(0, 0, 0, 0.6);
+        }
+        .message-ai .prose {
+            color: rgba(255, 255, 255, 0.92);
+            line-height: 1.7;
+            font-size: 14px;
+        }
+        .message-ai .prose a {
+            color: #a5b4fc;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+        .message-ai .prose strong { color: rgba(255, 255, 255, 0.96); }
+        .message-ai .prose code {
+            background: rgba(0, 0, 0, 0.28);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            padding: 0.15rem 0.35rem;
+            border-radius: 0.5rem;
+            color: rgba(255, 255, 255, 0.92);
+        }
+        .message-ai .prose pre {
+            background: rgba(0, 0, 0, 0.32);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            border-radius: 0.9rem;
+            padding: 0.85rem 1rem;
+            overflow: auto;
+        }
+        .message-ai .prose pre code {
+            background: transparent;
+            border: none;
+            padding: 0;
         }
         .typing-dot {
             width: 6px;
@@ -48,20 +83,20 @@
         }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+        ::-webkit-scrollbar-thumb { background: #374151; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #4b5563; }
     </style>
 </head>
-<body class="h-screen overflow-hidden">
-    <div class="h-full flex">
-        <aside class="w-[300px] bg-white border-r border-gray-200 flex flex-col">
-            <div class="h-16 px-4 flex items-center gap-3 border-b border-gray-100">
-                <div class="bg-blue-600 p-2 rounded-lg">
+<body class="theme h-screen overflow-hidden text-gray-100">
+    <div class="h-full flex relative z-10">
+        <aside class="w-[300px] tone-card tone-border border-r flex flex-col">
+            <div class="h-16 px-4 flex items-center gap-3 border-b tone-border">
+                <div class="bg-blue-600/90 p-2 rounded-xl shadow-sm">
                     <i data-lucide="bot" class="text-white w-6 h-6"></i>
                 </div>
                 <div class="flex-1 min-w-0">
-                    <div class="text-sm font-semibold text-gray-900 truncate">AI Assistant</div>
-                    <div class="text-xs text-gray-500 truncate">会话管理</div>
+                    <div class="text-sm font-semibold text-gray-100 truncate">AI Assistant</div>
+                    <div class="text-xs text-gray-400 truncate">会话管理</div>
                 </div>
             </div>
 
@@ -73,12 +108,12 @@
             </div>
 
             <div class="px-2 pb-2 flex-1 overflow-y-auto">
-                <div class="px-3 py-2 text-xs font-semibold text-gray-500">会话列表</div>
+                <div class="px-3 py-2 text-xs font-semibold text-gray-400">会话列表</div>
                 <div id="sessionList" class="space-y-1"></div>
             </div>
 
-            <div class="p-4 border-t border-gray-100">
-                <button onclick="window.location.href='/login'" class="w-full flex items-center justify-center gap-2 text-gray-600 hover:text-red-600 transition-colors text-sm font-medium">
+            <div class="p-4 border-t tone-border">
+                <button onclick="window.location.href='/login'" class="w-full flex items-center justify-center gap-2 text-gray-300 hover:text-red-400 transition-colors text-sm font-medium">
                     <i data-lucide="log-out" class="w-5 h-5"></i>
                     <span>退出登录</span>
                 </button>
@@ -86,30 +121,29 @@
         </aside>
 
         <div class="flex-1 flex flex-col">
-            <header class="h-16 bg-white/80 backdrop-blur border-b border-gray-200 flex items-center justify-between px-6">
-                <div class="flex items-center gap-2 text-gray-500">
+            <header class="h-16 tone-card tone-border border-b flex items-center justify-between px-6">
+                <div class="flex items-center gap-2 text-gray-400">
                     <i data-lucide="messages-square" class="w-5 h-5"></i>
-                    <span id="sessionTitle" class="text-sm font-medium text-gray-700 truncate max-w-[320px]">新对话</span>
+                    <span id="sessionTitle" class="text-sm font-medium text-gray-200 truncate max-w-[320px]">新对话</span>
                 </div>
 
                 <div class="flex items-center gap-3">
-                    <div class="flex items-center space-x-2 bg-gray-100 px-3 py-1.5 rounded-full border border-gray-200">
-                        <i data-lucide="layers" class="w-4 h-4 text-gray-500"></i>
-                        <select id="modelType" class="bg-transparent text-sm font-medium focus:outline-none cursor-pointer">
-                            <option value="1">阿里百炼 (Qwen)</option>
-                            <option value="2">豆包 (Doubao)</option>
-                            <option value="3">DeepSeek R1</option>
-                        </select>
+                    <div class="flex items-center space-x-2 bg-black/20 px-3 py-1.5 rounded-full border tone-border">
+                        <i data-lucide="layers" class="w-4 h-4 text-gray-400"></i>
+                        <div id="currentModelLabel" class="text-sm font-medium text-gray-200">通义千问</div>
                     </div>
+                    <a id="openModelConfig" href="/settings.html" class="p-2 rounded-full border tone-border bg-black/20 hover:bg-black/30 text-gray-200 transition-colors">
+                        <i data-lucide="settings" class="w-4 h-4"></i>
+                    </a>
                 </div>
             </header>
 
-            <main class="flex-1 overflow-hidden bg-gray-50">
+            <main class="flex-1 overflow-hidden">
                 <div id="chatScroll" class="h-full overflow-y-auto px-4 sm:px-8 py-6">
                     <div class="max-w-4xl mx-auto">
                         <div id="emptyState" class="min-h-[calc(100vh-16rem)] flex flex-col items-center justify-center text-center gap-6">
-                            <div class="text-3xl sm:text-4xl font-semibold text-gray-900">你好，我是 AI Assistant</div>
-                            <div class="text-sm text-gray-500">你可以从下面挑选一个问题快速开始</div>
+                            <div class="text-3xl sm:text-4xl font-semibold text-gray-100">你好，我是 AI Assistant</div>
+                            <div class="text-sm text-gray-400">你可以从下面挑选一个问题快速开始</div>
                             <div id="suggestions" class="flex flex-wrap justify-center gap-3 max-w-3xl"></div>
                         </div>
 
@@ -118,16 +152,25 @@
                 </div>
             </main>
 
-            <footer class="p-4 sm:p-6 bg-gray-50 border-t border-gray-200">
+            <footer class="p-4 sm:p-6 tone-card tone-border border-t">
                 <div class="max-w-4xl mx-auto relative">
                     <form id="chat-form" class="relative">
                         <textarea 
                             id="question" 
                             rows="1" 
                             placeholder="请输入你的问题..."
-                            class="w-full pl-4 pr-14 py-4 glass rounded-2xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none text-gray-700 leading-relaxed transition-all"
+                            class="w-full pl-4 pr-14 py-4 rounded-2xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none text-gray-100 placeholder:text-gray-500 leading-relaxed transition-all border tone-border bg-black/20"
                             required
                         ></textarea>
+                        <input id="image-input" type="file" accept="image/*" multiple class="hidden" />
+                        <button
+                            type="button"
+                            id="image-btn"
+                            class="absolute right-14 top-2 bottom-2 text-gray-200/80 hover:text-white bg-black/10 hover:bg-black/20 p-3 rounded-xl transition-all active:scale-95"
+                            title="添加图片"
+                        >
+                            <i data-lucide="image" class="w-5 h-5"></i>
+                        </button>
                         <button 
                             type="submit" 
                             class="absolute right-2 top-2 bottom-2 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-xl shadow-md transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:scale-100"
@@ -136,7 +179,8 @@
                             <i data-lucide="send" class="w-5 h-5"></i>
                         </button>
                     </form>
-                    <p class="text-center text-[10px] text-gray-400 mt-2">基于 libhv 构建的极简 AI 后端服务</p>
+                    <div id="image-preview" class="mt-3 flex flex-wrap gap-2"></div>
+                    <p class="text-center text-[10px] text-gray-500 mt-2">基于 libhv 构建的极简 AI 后端服务</p>
                 </div>
             </footer>
         </div>
@@ -149,8 +193,11 @@
         const sessionTitle = document.getElementById('sessionTitle');
         const chatForm = document.getElementById('chat-form');
         const questionInput = document.getElementById('question');
-        const modelTypeSelect = document.getElementById('modelType');
         const sendBtn = document.getElementById('send-btn');
+        const currentModelLabel = document.getElementById('currentModelLabel');
+        const imageInput = document.getElementById('image-input');
+        const imageBtn = document.getElementById('image-btn');
+        const imagePreview = document.getElementById('image-preview');
         const newSessionBtn = document.getElementById('newSessionBtn');
         const chatScroll = document.getElementById('chatScroll');
         const emptyState = document.getElementById('emptyState');
@@ -158,6 +205,7 @@
         const suggestionsEl = document.getElementById('suggestions');
         let currentSessionId = '';
         let sessionsCache = [];
+        let pendingImages = [];
 
         const suggestionPresets = [
             '给我一个学习 C++ 的路线建议',
@@ -167,6 +215,36 @@
             '给我一个前端页面布局优化建议',
             '如何做一次完整的服务端日志设计？'
         ];
+
+        async function refreshActiveModelLabel() {
+            try {
+                const resp = await fetch('/llm/profiles', { method: 'GET' });
+                const data = await resp.json();
+                if (!data || !data.success) return;
+                const activeKey = data.activeKey || '';
+                const profiles = Array.isArray(data.profiles) ? data.profiles : [];
+                if (!activeKey) {
+                    currentModelLabel.textContent = '通义千问';
+                    return;
+                }
+                if (activeKey === 'default') {
+                    currentModelLabel.textContent = '通义千问';
+                }
+                const p = profiles.find(x => x && x.key === activeKey);
+                const model = p && p.modelType ? String(p.modelType) : '';
+                currentModelLabel.textContent = model ? model : activeKey;
+                const supportsVision = !!(p && p.capabilities && p.capabilities.vision);
+                imageBtn.disabled = !supportsVision;
+                imageBtn.classList.toggle('opacity-50', !supportsVision);
+                imageBtn.classList.toggle('cursor-not-allowed', !supportsVision);
+                imageBtn.title = supportsVision ? '添加图片' : '当前模型不支持图片输入';
+                if (!supportsVision) {
+                    pendingImages = [];
+                    imagePreview.innerHTML = '';
+                    if (imageInput) imageInput.value = '';
+                }
+            } catch (_) {}
+        }
 
         function showEmptyState(show) {
             emptyState.classList.toggle('hidden', !show);
@@ -186,7 +264,7 @@
             for (const text of suggestionPresets) {
                 const btn = document.createElement('button');
                 btn.type = 'button';
-                btn.className = 'px-4 py-2 rounded-full bg-white border border-gray-200 text-sm text-gray-700 hover:border-blue-300 hover:text-blue-700 hover:bg-blue-50 transition-colors';
+                btn.className = 'px-4 py-2 rounded-full bg-gray-900/60 border border-gray-800 text-sm text-gray-200 hover:border-blue-500/60 hover:text-blue-200 hover:bg-blue-600/10 transition-colors';
                 btn.textContent = text;
                 btn.addEventListener('click', () => {
                     questionInput.value = text;
@@ -227,7 +305,7 @@
                 const active = s.sessionId === currentSessionId;
                 item.className = [
                     'group w-full text-left px-3 py-2 rounded-xl border transition-colors',
-                    active ? 'bg-blue-50 border-blue-200' : 'bg-white border-transparent hover:bg-gray-50 hover:border-gray-200'
+                    active ? 'bg-blue-600/10 border-blue-500/40' : 'bg-gray-900/40 border-transparent hover:bg-gray-900/60 hover:border-gray-800'
                 ].join(' ');
                 item.innerHTML = `
                     <div class="flex items-start gap-2">
@@ -235,11 +313,11 @@
                             <i data-lucide="message-circle" class="w-4 h-4"></i>
                         </div>
                         <div class="min-w-0 flex-1">
-                            <div class="text-sm font-medium ${active ? 'text-blue-700' : 'text-gray-800'} truncate">${(s.title || '新对话')}</div>
+                            <div class="text-sm font-medium ${active ? 'text-blue-200' : 'text-gray-100'} truncate">${(s.title || '新对话')}</div>
                             <div class="text-xs text-gray-500 truncate">${s.sessionId}</div>
                         </div>
                         <div class="flex-shrink-0">
-                            <button type="button" data-delete-session-id="${s.sessionId}" class="opacity-0 group-hover:opacity-100 transition-opacity text-red-500 hover:text-red-600 p-1 rounded-lg hover:bg-red-50">
+                            <button type="button" data-delete-session-id="${s.sessionId}" class="opacity-0 group-hover:opacity-100 transition-opacity text-red-400 hover:text-red-300 p-1 rounded-lg hover:bg-red-500/10">
                                 <i data-lucide="trash-2" class="w-4 h-4"></i>
                             </button>
                         </div>
@@ -344,7 +422,7 @@
             }
         });
 
-        function appendMessage(role, content) {
+        function appendMessage(role, content, imageDataUrls = []) {
             const isUser = role === 'user';
             const wrapper = document.createElement('div');
             wrapper.className = `flex ${isUser ? 'justify-end' : 'items-start'} ${isUser ? '' : 'gap-3'}`;
@@ -356,18 +434,25 @@
                    </div>`;
 
             const safeHtml = DOMPurify.sanitize(marked.parse(content));
+            const imgs = Array.isArray(imageDataUrls) && imageDataUrls.length
+                ? `<div class="mt-3 flex flex-wrap gap-2">
+                    ${imageDataUrls.map(u => `<img src="${u}" class="w-24 h-24 object-cover rounded-xl border tone-border bg-black/20" />`).join('')}
+                   </div>`
+                : '';
             
             wrapper.innerHTML = `
                 ${avatarHtml}
                 <div class="message-bubble ${isUser ? 'message-user' : 'message-ai'} p-4 rounded-2xl">
-                    <div class="prose prose-sm ${isUser ? 'text-white' : 'text-gray-800'} max-w-none">
+                    <div class="prose prose-sm ${isUser ? 'text-white' : 'text-gray-100'} max-w-none">
                         ${safeHtml}
                     </div>
+                    ${isUser ? imgs : ''}
                 </div>
             `;
             
             messagesEl.appendChild(wrapper);
             if (!isUser) lucide.createIcons();
+            return wrapper;
         }
 
         function showTypingIndicator() {
@@ -394,6 +479,48 @@
             if (indicator) indicator.remove();
         }
 
+        function renderImagePreview() {
+            imagePreview.innerHTML = '';
+            for (const item of pendingImages) {
+                const wrap = document.createElement('div');
+                wrap.className = 'relative w-20 h-20';
+                wrap.innerHTML = `
+                    <img src="${item}" class="w-20 h-20 object-cover rounded-xl border tone-border bg-black/20" />
+                    <button type="button" class="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-black/70 border tone-border text-white text-xs leading-6">×</button>
+                `;
+                const btn = wrap.querySelector('button');
+                btn.addEventListener('click', () => {
+                    pendingImages = pendingImages.filter(x => x !== item);
+                    renderImagePreview();
+                });
+                imagePreview.appendChild(wrap);
+            }
+        }
+
+        imageBtn.addEventListener('click', () => {
+            imageInput.click();
+        });
+
+        imageInput.addEventListener('change', async () => {
+            const files = Array.from(imageInput.files || []);
+            const remain = Math.max(0, 4 - pendingImages.length);
+            const picked = files.slice(0, remain);
+            for (const f of picked) {
+                if (!f || !f.type || !f.type.startsWith('image/')) continue;
+                if (f.size > 2 * 1024 * 1024) continue;
+                const dataUrl = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(String(reader.result || ''));
+                    reader.onerror = () => resolve('');
+                    reader.readAsDataURL(f);
+                });
+                if (!dataUrl) continue;
+                pendingImages.push(dataUrl);
+            }
+            renderImagePreview();
+            imageInput.value = '';
+        });
+
         newSessionBtn.addEventListener('click', async () => {
             const sid = await createSession('新对话');
             if (!sid) return;
@@ -417,7 +544,8 @@
 
             showEmptyState(false);
 
-            appendMessage('user', question);
+            const images = pendingImages.slice();
+            appendMessage('user', question, images);
             questionInput.value = '';
             resetInputHeight();
             sendBtn.disabled = true;
@@ -431,17 +559,96 @@
                     body: JSON.stringify({ 
                         sessionId: currentSessionId,
                         question, 
-                        modelType: modelTypeSelect.options[modelTypeSelect.selectedIndex].text 
+                        images
                     })
                 });
-                
-                const data = await response.json();
-                removeTypingIndicator();
-                
-                if (data.success) {
-                    appendMessage('assistant', data.Information);
-                } else {
-                    appendMessage('assistant', '⚠️ **系统错误**: ' + (data.message || '未知异常'));
+
+                if (!response.ok || !response.body) {
+                    removeTypingIndicator();
+                    appendMessage('assistant', '⚠️ **系统错误**: 服务端返回异常。');
+                    return;
+                }
+
+                let assistantWrapper = null;
+                let assistantText = '';
+                const decoder = new TextDecoder();
+                const reader = response.body.getReader();
+                let buf = '';
+
+                const updateAssistant = () => {
+                    if (!assistantWrapper) return;
+                    const prose = assistantWrapper.querySelector('.prose');
+                    if (!prose) return;
+                    const safeHtml = DOMPurify.sanitize(marked.parse(assistantText));
+                    prose.innerHTML = safeHtml;
+                    scrollToBottom();
+                };
+
+                const drain = () => {
+                    while (true) {
+                        let pos = buf.indexOf('\n\n');
+                        let dlen = 2;
+                        const pos2 = buf.indexOf('\r\n\r\n');
+                        if (pos === -1 || (pos2 !== -1 && pos2 < pos)) {
+                            pos = pos2;
+                            dlen = 4;
+                        }
+                        if (pos === -1) break;
+
+                        const block = buf.slice(0, pos);
+                        buf = buf.slice(pos + dlen);
+
+                        let eventType = 'message';
+                        let dataStr = '';
+                        for (const rawLine of block.split('\n')) {
+                            const line = rawLine.endsWith('\r') ? rawLine.slice(0, -1) : rawLine;
+                            if (line.startsWith('event:')) {
+                                eventType = line.slice(6).trim();
+                            } else if (line.startsWith('data:')) {
+                                dataStr += line.slice(5).trim();
+                            }
+                        }
+
+                        if (!dataStr) continue;
+
+                        let payload = null;
+                        try {
+                            payload = JSON.parse(dataStr);
+                        } catch (_) {
+                            continue;
+                        }
+
+                        if (eventType === 'delta' && payload.delta) {
+                            if (!assistantWrapper) {
+                                removeTypingIndicator();
+                                assistantWrapper = appendMessage('assistant', '');
+                            }
+                            assistantText += payload.delta;
+                            updateAssistant();
+                        } else if (eventType === 'error') {
+                            removeTypingIndicator();
+                            appendMessage('assistant', '⚠️ **系统错误**: ' + (payload.error || '未知异常'));
+                        } else if (eventType === 'done') {
+                            removeTypingIndicator();
+                            pendingImages = [];
+                            imagePreview.innerHTML = '';
+                            if (imageInput) imageInput.value = '';
+                        }
+                    }
+                };
+
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+                    buf += decoder.decode(value, { stream: true });
+                    drain();
+                }
+
+                drain();
+
+                if (!assistantWrapper) {
+                    removeTypingIndicator();
+                    appendMessage('assistant', '⚠️ **系统错误**: 未收到有效响应。');
                 }
             } catch (err) {
                 removeTypingIndicator();
@@ -455,8 +662,9 @@
         });
 
         renderSuggestions();
-        showEmptyState(true);
+        showEmptyState(false);
         loadSessions().catch(() => {});
+        refreshActiveModelLabel();
     </script>
 </body>
 </html>

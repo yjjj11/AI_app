@@ -8,7 +8,9 @@
 class BailianLLM final : public LLM {
 public:
     BailianLLM(std::string api_key, std::string base_url, std::string default_model, int timeout_seconds);
-    std::string chat(const std::string& prompt, const std::string& model_type) override;
+    std::string chat_messages(const hv::Json& messages) override;
+    std::string stream_chat_messages(const hv::Json& messages,
+                                     const std::function<void(std::string_view)>& on_delta) override;
 
 private:
     std::string api_key_;

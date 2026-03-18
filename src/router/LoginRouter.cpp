@@ -13,6 +13,22 @@ static std::string readTextFile(const std::string& path) {
 }
 
 void LoginRouter::registerRoutes(hv::HttpService& service) {
+    service.GET("/assets/theme.css", [](HttpRequest*, HttpResponse* resp) {
+        const std::string css = readTextFile("/root/my_ai_app/src/resource/assets/theme.css");
+        resp->content_type = TEXT_PLAIN;
+        resp->SetHeader("Content-Type", "text/css; charset=utf-8");
+        resp->body = css.empty() ? "" : css;
+        return css.empty() ? 404 : 200;
+    });
+
+    service.GET("/assets/theme.js", [](HttpRequest*, HttpResponse* resp) {
+        const std::string js = readTextFile("/root/my_ai_app/src/resource/assets/theme.js");
+        resp->content_type = TEXT_PLAIN;
+        resp->SetHeader("Content-Type", "application/javascript; charset=utf-8");
+        resp->body = js.empty() ? "" : js;
+        return js.empty() ? 404 : 200;
+    });
+
     service.GET("/", [](HttpRequest*, HttpResponse* resp) {
         const std::string html = readTextFile("/root/my_ai_app/src/resource/login.html");
         resp->content_type = TEXT_HTML;

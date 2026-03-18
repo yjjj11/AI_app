@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>模型配置 | AI Assistant</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="/assets/theme.css">
+    <script src="/assets/theme.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', "Microsoft YaHei", sans-serif;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body class="theme min-h-screen text-gray-100">
+    <div class="max-w-3xl mx-auto px-4 py-8">
+        <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center gap-3">
+                <div class="bg-blue-600/90 p-2 rounded-xl shadow-sm">
+                    <i data-lucide="settings" class="text-white w-5 h-5"></i>
+                </div>
+                <div>
+                    <div class="text-lg font-semibold text-gray-50">模型配置</div>
+                    <div class="text-xs text-gray-400">配置 OpenAI-compatible 模型（api_key / model_type / url）</div>
+                </div>
+            </div>
+            <a href="/ai.html" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-gray-900/60 border border-gray-800 text-sm text-gray-200 hover:bg-gray-900">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                返回聊天
+            </a>
+        </div>
+
+        <div class="tone-card animate__animated animate__fadeInUp">
+            <div class="px-6 py-5 border-b border-gray-800/60">
+                <div class="text-sm font-semibold text-gray-100">当前状态</div>
+                <div id="activeSummary" class="text-sm text-gray-300 mt-2">加载中...</div>
+            </div>
+            <div class="px-6 py-6 space-y-4">
+                <div>
+                    <div class="text-xs font-medium text-gray-300 mb-1">选择已有配置（可选）</div>
+                    <select id="profileSelect" class="w-full px-3 py-2 rounded-xl border border-gray-800 bg-gray-900/60 text-sm text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">新建配置</option>
+                    </select>
+                    <div id="profileKeyHint" class="text-[11px] text-gray-500 mt-1"></div>
+                </div>
+                <div id="newConfigFields" class="space-y-4">
+                    <div>
+                        <div class="text-xs font-medium text-gray-300 mb-1">模型名 (model_type)</div>
+                        <input id="modelType" class="w-full px-3 py-2 rounded-xl border border-gray-800 bg-gray-900/60 text-sm text-gray-100 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="qwen-plus / qwen2.5-vl / gpt-4o-mini / deepseek-chat" />
+                    </div>
+                    <div>
+                        <div class="text-xs font-medium text-gray-300 mb-1">API Key</div>
+                        <input id="apiKey" type="password" class="w-full px-3 py-2 rounded-xl border border-gray-800 bg-gray-900/60 text-sm text-gray-100 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="sk-..." />
+                    </div>
+                    <div>
+                        <div class="text-xs font-medium text-gray-300 mb-1">Base URL</div>
+                        <input id="baseUrl" class="w-full px-3 py-2 rounded-xl border border-gray-800 bg-gray-900/60 text-sm text-gray-100 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="https://api.openai.com/v1/chat/completions" />
+                    </div>
+                    <div>
+                        <div class="text-xs font-medium text-gray-300 mb-1">能力 (capabilities)</div>
+                        <label class="flex items-center gap-2 text-sm text-gray-200 mb-2">
+                            <input id="capAuto" type="checkbox" class="rounded border-gray-700 bg-gray-900" checked />
+                            自动推断
+                        </label>
+                        <div class="flex flex-wrap gap-3">
+                            <label class="flex items-center gap-2 text-sm text-gray-200">
+                                <input id="capVision" type="checkbox" class="rounded border-gray-700 bg-gray-900" />
+                                图片
+                            </label>
+                            <label class="flex items-center gap-2 text-sm text-gray-200">
+                                <input id="capAudio" type="checkbox" class="rounded border-gray-700 bg-gray-900" />
+                                语音
+                            </label>
+                            <label class="flex items-center gap-2 text-sm text-gray-200">
+                                <input id="capFiles" type="checkbox" class="rounded border-gray-700 bg-gray-900" />
+                                文件
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-xs text-gray-400 pt-1">保存会先进行一次对话 ping，成功才会生效</div>
+                <div class="flex justify-end gap-3 pt-2">
+                    <button id="refreshBtn" type="button" class="px-4 py-2 rounded-xl bg-gray-900/60 border border-gray-800 text-gray-200 text-sm font-medium hover:bg-gray-900">刷新</button>
+                    <button id="activateBtn" type="button" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium hidden">设为当前使用并返回</button>
+                    <button id="saveBtn" type="button" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium">保存并返回</button>
+                </div>
+                <div id="result" class="text-xs text-gray-500 pt-2"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        const activeSummaryEl = document.getElementById('activeSummary');
+        const profileSelectEl = document.getElementById('profileSelect');
+        const profileKeyHintEl = document.getElementById('profileKeyHint');
+        const modelTypeEl = document.getElementById('modelType');
+        const apiKeyEl = document.getElementById('apiKey');
+        const baseUrlEl = document.getElementById('baseUrl');
+        const capAutoEl = document.getElementById('capAuto');
+        const capVisionEl = document.getElementById('capVision');
+        const capAudioEl = document.getElementById('capAudio');
+        const capFilesEl = document.getElementById('capFiles');
+        const resultEl = document.getElementById('result');
+        const refreshBtn = document.getElementById('refreshBtn');
+        const activateBtn = document.getElementById('activateBtn');
+        const saveBtn = document.getElementById('saveBtn');
+        const newConfigFieldsEl = document.getElementById('newConfigFields');
+        let selectedProfileKey = '';
+        let profilesCache = [];
+
+        function updateModeUI() {
+            const isNew = !selectedProfileKey;
+            newConfigFieldsEl.classList.toggle('hidden', !isNew);
+            saveBtn.classList.toggle('hidden', !isNew);
+            activateBtn.classList.toggle('hidden', isNew);
+        }
+
+        function inferCapsFromModel(model) {
+            const m = String(model || '').toLowerCase();
+            const vision = m.includes('vl') || m.includes('vision') || m.includes('gpt-4o') || m.includes('gpt-4.1');
+            const audio = m.includes('audio') || m.includes('omni');
+            return { vision, audio, files: false };
+        }
+
+        function applyCapsUI() {
+            const autoMode = !!capAutoEl.checked;
+            capVisionEl.disabled = autoMode;
+            capAudioEl.disabled = autoMode;
+            capFilesEl.disabled = autoMode;
+            if (autoMode) {
+                const c = inferCapsFromModel(modelTypeEl.value);
+                capVisionEl.checked = !!c.vision;
+                capAudioEl.checked = !!c.audio;
+                capFilesEl.checked = !!c.files;
+            }
+        }
+
+        async function loadProfiles() {
+            resultEl.textContent = '';
+            const resp = await fetch('/llm/profiles', { method: 'GET' });
+            const data = await resp.json();
+            if (!data || !data.success) {
+                activeSummaryEl.textContent = '读取失败';
+                return;
+            }
+
+            const activeKey = data.activeKey || '';
+            profilesCache = Array.isArray(data.profiles) ? data.profiles : [];
+            const active = profilesCache.find(p => p.key === activeKey);
+
+            profileSelectEl.innerHTML = '';
+            {
+                const optNew = document.createElement('option');
+                optNew.value = '';
+                optNew.textContent = '新建配置';
+                profileSelectEl.appendChild(optNew);
+                for (const p of profilesCache) {
+                    const opt = document.createElement('option');
+                    opt.value = p.key || '';
+                    const model = p.modelType || '';
+                    const url = p.baseUrl || '';
+                    const k = p.key || '';
+                    if (k === 'default') {
+                        opt.textContent = '通义千问（默认）';
+                    } else {
+                        opt.textContent = model ? `${model} (${k})` : k;
+                    }
+                    opt.title = url || '';
+                    profileSelectEl.appendChild(opt);
+                }
+            }
+
+            if (!activeKey) {
+                activeSummaryEl.textContent = '当前使用：未设置默认配置';
+            } else if (!active) {
+                activeSummaryEl.textContent = `当前使用：${activeKey}`;
+            } else {
+                const model = active.modelType || '';
+                const url = active.baseUrl || '';
+                if (active.key === 'default') {
+                    activeSummaryEl.textContent = '当前使用：通义千问（默认）';
+                } else {
+                    activeSummaryEl.textContent = `当前使用：自定义模型 ${model ? '(' + model + ')' : ''}  ${url ? url : ''}`;
+                }
+                if (!modelTypeEl.value.trim() && model) modelTypeEl.value = model;
+                if (!baseUrlEl.value.trim() && url) baseUrlEl.value = url;
+                if (!selectedProfileKey) selectedProfileKey = active.key || '';
+            }
+
+            profileSelectEl.value = selectedProfileKey || '';
+            if (!selectedProfileKey) {
+                profileKeyHintEl.textContent = '';
+            } else if (selectedProfileKey === 'default') {
+                profileKeyHintEl.textContent = '当前编辑：通义千问（默认）';
+            } else {
+                profileKeyHintEl.textContent = `当前编辑 key：${selectedProfileKey}`;
+            }
+            updateModeUI();
+        }
+
+        async function saveConfig() {
+            resultEl.className = 'text-xs text-gray-400 pt-2';
+            resultEl.textContent = '保存中...';
+            saveBtn.disabled = true;
+            refreshBtn.disabled = true;
+            const modelType = modelTypeEl.value.trim();
+            const apiKey = apiKeyEl.value.trim();
+            const baseUrl = baseUrlEl.value.trim();
+
+            if (!modelType) {
+                resultEl.className = 'text-xs text-red-600 pt-2';
+                resultEl.textContent = '请填写 model_type';
+                saveBtn.disabled = false;
+                refreshBtn.disabled = false;
+                return;
+            }
+            if (!apiKey) {
+                resultEl.className = 'text-xs text-red-600 pt-2';
+                resultEl.textContent = '请填写 api_key';
+                saveBtn.disabled = false;
+                refreshBtn.disabled = false;
+                return;
+            }
+            if (!baseUrl) {
+                resultEl.className = 'text-xs text-red-600 pt-2';
+                resultEl.textContent = '请填写 url';
+                saveBtn.disabled = false;
+                refreshBtn.disabled = false;
+                return;
+            }
+
+            const payload = {
+                modelType,
+                apiKey,
+                baseUrl,
+                setActive: true,
+                profileKey: selectedProfileKey
+            };
+            if (!capAutoEl.checked) {
+                payload.capabilities = {
+                    vision: !!capVisionEl.checked,
+                    audio: !!capAudioEl.checked,
+                    files: !!capFilesEl.checked
+                };
+            }
+
+            try {
+                const resp = await fetch('/llm/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await resp.json().catch(() => ({}));
+                if (!resp.ok || !data || !data.success) {
+                    const msg = (data && data.message) ? data.message : '保存失败';
+                    resultEl.className = 'text-xs text-red-400 pt-2';
+                    resultEl.textContent = msg;
+                    return;
+                }
+                const ping = (data && data.pingPreview) ? String(data.pingPreview) : '';
+                resultEl.className = 'text-xs text-emerald-300 pt-2';
+                resultEl.textContent = ping ? ('保存成功，ping=' + ping) : '保存成功';
+                if (data && data.key) {
+                    selectedProfileKey = String(data.key);
+                    profileKeyHintEl.textContent = `当前编辑 key：${selectedProfileKey}`;
+                }
+                loadProfiles().catch(() => {});
+                setTimeout(() => { window.location.assign('/ai.html'); }, 200);
+            } catch (_) {
+                resultEl.className = 'text-xs text-red-400 pt-2';
+                resultEl.textContent = '保存失败';
+            } finally {
+                saveBtn.disabled = false;
+                refreshBtn.disabled = false;
+            }
+        }
+
+        async function setActive() {
+            if (!selectedProfileKey) return;
+            resultEl.className = 'text-xs text-gray-400 pt-2';
+            resultEl.textContent = '切换中...';
+            activateBtn.disabled = true;
+            refreshBtn.disabled = true;
+            try {
+                const resp = await fetch('/llm/active', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ key: selectedProfileKey })
+                });
+                const data = await resp.json().catch(() => ({}));
+                if (!data || !data.success) {
+                    resultEl.className = 'text-xs text-red-400 pt-2';
+                    resultEl.textContent = (data && data.message) ? String(data.message) : '切换失败';
+                    return;
+                }
+                resultEl.className = 'text-xs text-emerald-300 pt-2';
+                resultEl.textContent = '已切换为当前使用';
+                setTimeout(() => { window.location.assign('/ai.html'); }, 200);
+            } catch (_) {
+                resultEl.className = 'text-xs text-red-400 pt-2';
+                resultEl.textContent = '切换失败';
+            } finally {
+                activateBtn.disabled = false;
+                refreshBtn.disabled = false;
+            }
+        }
+
+        refreshBtn.addEventListener('click', loadProfiles);
+        saveBtn.addEventListener('click', saveConfig);
+        activateBtn.addEventListener('click', setActive);
+        capAutoEl.addEventListener('change', applyCapsUI);
+        modelTypeEl.addEventListener('input', applyCapsUI);
+        profileSelectEl.addEventListener('change', () => {
+            selectedProfileKey = profileSelectEl.value || '';
+            if (!selectedProfileKey) {
+                profileKeyHintEl.textContent = '';
+            } else if (selectedProfileKey === 'default') {
+                profileKeyHintEl.textContent = '当前编辑：通义千问（默认）';
+            } else {
+                profileKeyHintEl.textContent = `当前编辑 key：${selectedProfileKey}`;
+            }
+            const p = profilesCache.find(x => (x.key || '') === selectedProfileKey);
+            if (p) {
+                if (p.modelType) modelTypeEl.value = p.modelType;
+                if (p.baseUrl) baseUrlEl.value = p.baseUrl;
+                apiKeyEl.value = '';
+            }
+            updateModeUI();
+        });
+
+        applyCapsUI();
+        loadProfiles().catch(() => {});
+    </script>
+</body>
+</html>

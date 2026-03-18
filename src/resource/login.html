@@ -4,23 +4,157 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>登录</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/assets/theme.css">
+  <script src="/assets/theme.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .hidden { display: none; }
+
+    .login-container {
+      background: rgba(25, 30, 40, 0.85);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+      width: 100%;
+      max-width: 400px;
+      padding: 40px;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      z-index: 10;
+    }
+
+    .login-container::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(106, 13, 173, 0.12) 0%, rgba(255,255,255,0) 70%);
+      z-index: 0;
+    }
+
+    .login-header {
+      text-align: center;
+      margin-bottom: 30px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .login-header h1 {
+      color: #e0e0e0;
+      font-size: 28px;
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+
+    .login-header p {
+      color: #aaa;
+      font-size: 14px;
+    }
+
+    .input-group {
+      position: relative;
+      margin-bottom: 18px;
+      z-index: 1;
+      transition: transform 0.25s ease;
+    }
+
+    .input-group input {
+      width: 100%;
+      padding: 15px 20px 15px 50px;
+      border: none;
+      background-color: rgba(40, 45, 55, 0.8);
+      border-radius: 12px;
+      font-size: 16px;
+      color: #e0e0e0;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+    }
+
+    .input-group input:focus {
+      outline: none;
+      box-shadow: 0 8px 20px rgba(106, 13, 173, 0.35);
+      transform: translateY(-2px);
+    }
+
+    .input-group input::placeholder { color: #888; }
+
+    .input-icon {
+      position: absolute;
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #8b5cf6;
+      font-size: 18px;
+      transition: all 0.3s ease;
+      user-select: none;
+    }
+
+    .login-button {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(to right, #6a0dad, #8b5cf6);
+      border: none;
+      border-radius: 12px;
+      color: white;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 5px 15px rgba(106, 13, 173, 0.4);
+      transition: all 0.25s ease;
+      position: relative;
+      z-index: 1;
+    }
+
+    .login-button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(106, 13, 173, 0.55);
+    }
+
+    .login-button:active { transform: translateY(0); }
+
+    #err {
+      margin-top: 14px;
+      color: #fca5a5;
+      font-size: 14px;
+      position: relative;
+      z-index: 1;
+      text-align: center;
+    }
+  </style>
 </head>
-<body class="min-h-screen bg-gray-50 flex items-center justify-center p-6">
-  <div class="w-full max-w-md bg-white rounded-2xl shadow p-6 border border-gray-200">
-    <div class="text-xl font-semibold text-gray-900">AI Assistant 登录</div>
-    <div class="text-sm text-gray-500 mt-1">使用 admin / 123456 登录</div>
-    <form id="f" class="mt-6 space-y-4">
-      <div>
-        <label class="block text-sm font-medium text-gray-700">用户名</label>
-        <input id="u" class="mt-1 w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="admin" required />
+<body class="theme">
+
+  <div class="login-container animate__animated animate__fadeInUp">
+    <div class="login-header">
+      <h1 class="animate__animated animate__fadeInDown">欢迎回来</h1>
+      <p class="animate__animated animate__fadeInDown animate__delay-1s">使用 admin / 123456 登录</p>
+    </div>
+    <form id="f">
+      <div class="input-group animate__animated animate__fadeInLeft animate__delay-1s">
+        <div class="input-icon">👤</div>
+        <input id="u" type="text" placeholder="用户名" required>
       </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-700">密码</label>
-        <input id="p" type="password" class="mt-1 w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="123456" />
+      <div class="input-group animate__animated animate__fadeInRight animate__delay-1s">
+        <div class="input-icon">🔒</div>
+        <input id="p" type="password" placeholder="密码">
       </div>
-      <button class="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl py-3 font-medium" type="submit">登录</button>
-      <div id="err" class="text-sm text-red-600 hidden"></div>
+      <button class="login-button animate__animated animate__pulse animate__delay-2s" type="submit">登录</button>
+      <div id="err" class="hidden"></div>
     </form>
   </div>
   <script>
@@ -28,6 +162,12 @@
     const u = document.getElementById('u');
     const p = document.getElementById('p');
     const err = document.getElementById('err');
+
+    document.querySelectorAll('.input-group input').forEach(input => {
+      input.addEventListener('focus', function() { this.parentElement.style.transform = 'scale(1.02)'; });
+      input.addEventListener('blur', function() { this.parentElement.style.transform = 'scale(1)'; });
+    });
+
     f.addEventListener('submit', async (e) => {
       e.preventDefault();
       err.classList.add('hidden');
