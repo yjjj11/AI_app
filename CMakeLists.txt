@@ -60,15 +60,26 @@ set(SOURCE_FILES
     src/main.cpp 
     src/HttpServer.cpp
     src/config/Dotenv.cpp
+    src/config/AgentConfig.cpp
     src/ai/LLMFactory.cpp
     src/ai/BailianLLM.cpp
+    src/agentic/EmbeddingClient.cpp
+    src/agentic/EmbeddingFactory.cpp
+    src/agentic/QdrantClient.cpp
+    src/agentic/RagRetriever.cpp
+    src/agentic/InterviewPipeline.cpp
+    src/agentic/InterviewPipelineDefaults.cpp
     src/service/LoginService.cpp
     src/router/LoginRouter.cpp
     src/service/ChatService.cpp
+    src/service/InterviewService.cpp
     src/service/SettingService.cpp
     src/service/ChatMySqlStore.cpp
+    src/service/MemoryIndexService.cpp
     src/router/ChatRouter.cpp
+    src/router/InterviewRouter.cpp
     src/router/SettingRouter.cpp
+    src/router/DebugRouter.cpp
 )
 
 add_executable(app ${SOURCE_FILES})
@@ -137,4 +148,87 @@ if(USE_BUNDLED_LIBHV)
     target_link_libraries(model_switch_smoketest hv_static ssl crypto)
 else()
     target_link_libraries(model_switch_smoketest ${HV_LIBRARY} ssl crypto)
+endif()
+
+add_executable(embedding_smoketest
+    test/embedding_smoketest.cpp
+    src/config/Dotenv.cpp
+    src/config/AgentConfig.cpp
+    src/ai/LLMFactory.cpp
+    src/ai/BailianLLM.cpp
+    src/agentic/EmbeddingClient.cpp
+    src/agentic/EmbeddingFactory.cpp
+)
+target_compile_definitions(embedding_smoketest PRIVATE CPPHTTPLIB_OPENSSL_SUPPORT)
+if(USE_BUNDLED_LIBHV)
+    target_link_libraries(embedding_smoketest hv_static ssl crypto)
+else()
+    target_link_libraries(embedding_smoketest ${HV_LIBRARY} ssl crypto)
+endif()
+
+add_executable(qdrant_smoketest
+    test/qdrant_smoketest.cpp
+    src/config/Dotenv.cpp
+    src/config/AgentConfig.cpp
+    src/ai/LLMFactory.cpp
+    src/ai/BailianLLM.cpp
+    src/agentic/EmbeddingClient.cpp
+    src/agentic/EmbeddingFactory.cpp
+    src/agentic/QdrantClient.cpp
+)
+target_compile_definitions(qdrant_smoketest PRIVATE CPPHTTPLIB_OPENSSL_SUPPORT)
+if(USE_BUNDLED_LIBHV)
+    target_link_libraries(qdrant_smoketest hv_static ssl crypto)
+else()
+    target_link_libraries(qdrant_smoketest ${HV_LIBRARY} ssl crypto)
+endif()
+
+add_executable(memory_index_smoketest
+    test/memory_index_smoketest.cpp
+    src/config/Dotenv.cpp
+    src/config/AgentConfig.cpp
+    src/ai/LLMFactory.cpp
+    src/ai/BailianLLM.cpp
+    src/agentic/EmbeddingClient.cpp
+    src/agentic/EmbeddingFactory.cpp
+    src/agentic/QdrantClient.cpp
+    src/service/ChatMySqlStore.cpp
+    src/service/MemoryIndexService.cpp
+    src/service/ChatService.cpp
+)
+target_compile_definitions(memory_index_smoketest PRIVATE ORMPP_ENABLE_MYSQL)
+target_compile_definitions(memory_index_smoketest PRIVATE CPPHTTPLIB_OPENSSL_SUPPORT)
+if(USE_BUNDLED_LIBHV)
+    target_link_libraries(memory_index_smoketest hv_static ssl crypto mysqlclient)
+else()
+    target_link_libraries(memory_index_smoketest ${HV_LIBRARY} ssl crypto mysqlclient)
+endif()
+set_target_properties(memory_index_smoketest PROPERTIES LINK_FLAGS "-Wl,-z,muldefs")
+
+add_executable(sse_hold_smoketest
+    test/sse_hold_smoketest.cpp
+)
+target_compile_definitions(sse_hold_smoketest PRIVATE CPPHTTPLIB_OPENSSL_SUPPORT)
+if(USE_BUNDLED_LIBHV)
+    target_link_libraries(sse_hold_smoketest hv_static ssl crypto)
+else()
+    target_link_libraries(sse_hold_smoketest ${HV_LIBRARY} ssl crypto)
+endif()
+
+add_executable(rag_hit_rate_eval
+    test/rag_hit_rate_eval.cpp
+    src/config/Dotenv.cpp
+    src/config/AgentConfig.cpp
+    src/ai/LLMFactory.cpp
+    src/ai/BailianLLM.cpp
+    src/agentic/EmbeddingClient.cpp
+    src/agentic/EmbeddingFactory.cpp
+    src/agentic/QdrantClient.cpp
+    src/agentic/RagRetriever.cpp
+)
+target_compile_definitions(rag_hit_rate_eval PRIVATE CPPHTTPLIB_OPENSSL_SUPPORT)
+if(USE_BUNDLED_LIBHV)
+    target_link_libraries(rag_hit_rate_eval hv_static ssl crypto)
+else()
+    target_link_libraries(rag_hit_rate_eval ${HV_LIBRARY} ssl crypto)
 endif()

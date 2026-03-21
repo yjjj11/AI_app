@@ -4,6 +4,7 @@
 
 #include "ormpp/connection_pool.hpp"
 
+#include <algorithm>
 #include <hv/HttpService.h>
 
 static hv::Json buildUserMessages(const std::string& question, const std::vector<std::string>& imageDataUrls) {
@@ -71,11 +72,52 @@ std::vector<chat_message_row> ChatService::getHistory(const std::string& usernam
     return conn->query_s<chat_message_row>("username=? and session_id=? order by id asc limit ? offset ?", user, sid, limit, offset);
 }
 
+int ChatService::countMessages(const std::string& username, const std::string& sessionId) {
+    auto& pool = ormpp::connection_pool<Db>::instance();
+    auto conn = pool.get();
+    if (!conn) return 0;
+    const std::string user = username.empty() ? "unknown" : username;
+    const std::string sid = sessionId.empty() ? "default" : sessionId;
+    try {
+        auto rows = conn->query<std::tuple<int64_t>>("select count(*) from chat_messages where username=? and session_id=?", user, sid);
+        if (rows.empty()) return 0;
+        return (int)std::get<0>(rows[0]);
+    } catch (...) {
+        return 0;
+    }
+}
+
+int64_t ChatService::maxMessageId(const std::string& username, const std::string& sessionId) {
+    auto& pool = ormpp::connection_pool<Db>::instance();
+    auto conn = pool.get();
+    if (!conn) return 0;
+    const std::string user = username.empty() ? "unknown" : username;
+    const std::string sid = sessionId.empty() ? "default" : sessionId;
+    try {
+        auto rows = conn->query<std::tuple<int64_t>>("select max(id) from chat_messages where username=? and session_id=?", user, sid);
+        if (rows.empty()) return 0;
+        return (int64_t)std::get<0>(rows[0]);
+    } catch (...) {
+        return 0;
+    }
+}
+
+std::vector<chat_message_row> ChatService::getTailHistory(const std::string& username, const std::string& sessionId, int limit) {
+    if (limit <= 0) limit = 100;
+    auto& pool = ormpp::connection_pool<Db>::instance();
+    auto conn = pool.get();
+    if (!conn) return {};
+    const std::string user = username.empty() ? "unknown" : username;
+    const std::string sid = sessionId.empty() ? "default" : sessionId;
+    auto rows = conn->query_s<chat_message_row>("username=? and session_id=? order by id desc limit ?", user, sid, limit);
+    std::reverse(rows.begin(), rows.end());
+    return rows;
+}
+
 std::string ChatService::streamMessage(const std::string& question,
                                        const std::vector<std::string>& imageDataUrls,
                                        const std::function<void(std::string_view)>& on_delta) {
-    const std::string key = LLMFactory::getActiveKey();
-    auto llm = LLMFactory::get(key.empty() ? "default" : key);
+    auto llm = LLMFactory::get();
     if (!llm) {
         return "";
     }

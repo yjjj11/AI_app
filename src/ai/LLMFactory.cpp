@@ -39,8 +39,23 @@ static LLMFactory::Profile::Capabilities inferCapabilities(const LLMFactory::Pro
 
 static std::string resolveKeyLocked(const std::string& key) {
     if (key == "active") {
-        if (!g_active_key.empty()) return g_active_key;
-        return g_default_key;
+        std::string k = g_active_key.empty() ? g_default_key : g_active_key;
+        auto it = g_profiles.find(k);
+        if (it != g_profiles.end()) {
+            const std::string& u = it->second.base_url;
+            const bool is_local = (u.find("127.0.0.1") != std::string::npos) || (u.find("localhost") != std::string::npos);
+            if (is_local) {
+                for (const auto& kv : g_profiles) {
+                    if (kv.second.base_url.find("dashscope.aliyuncs.com") != std::string::npos) return kv.first;
+                }
+                for (const auto& kv : g_profiles) {
+                    const std::string& uu = kv.second.base_url;
+                    const bool local2 = (uu.find("127.0.0.1") != std::string::npos) || (uu.find("localhost") != std::string::npos);
+                    if (!local2) return kv.first;
+                }
+            }
+        }
+        return k;
     }
     if (key.empty() || key == "default") {
         return g_default_key;

@@ -1,6 +1,7 @@
 #include "HttpServer.h"
 #include "ai/LLMFactory.h"
 #include "config/Dotenv.h"
+#include "config/AgentConfig.h"
 
 #include <cstdlib>
 #include <iostream>
@@ -8,12 +9,13 @@
 int main() {
     Dotenv::loadFromFile("/root/my_ai_app/config/mysql.env");
     Dotenv::loadFromFile("/root/my_ai_app/config/ai.env");
-    LLMFactory::loadProfilesFromFile("/root/my_ai_app/config/llm_profiles.json");
-    auto llm = LLMFactory::get();
-    if (!llm) {
-        std::cerr << "LLM init failed\n";
-        return 1;
+    if (!Dotenv::loadFromFile("/root/my_ai_app/config/agent.config")) {
+        Dotenv::loadFromFile("/root/my_ai_app/config/agent.config.template");
     }
+    if (!LLMFactory::loadProfilesFromFile("/root/my_ai_app/config/llm_profiles.json")) {
+        LLMFactory::loadProfilesFromFile("/root/my_ai_app/config/llm_profiles.json.template");
+    }
+    AgentConfig::loadFromEnv().logStartupHints();
     int port = 8888;
     if (const char* v = std::getenv("HTTP_PORT"); v && *v) {
         const int x = std::atoi(v);

@@ -1,0 +1,4 @@
+{"query":"qdrant ping","session_id":"smoke","memory_type":"short","expect_contains":["qdrant ping"],"topk":5}
+{"query":"ping","session_id":"smoke","memory_type":"short","expect_contains":["qdrant ping"],"topk":5}
+{"query":"this should miss","session_id":"smoke","memory_type":"short","expect_contains":["definitely not in store"],"topk":5}
+

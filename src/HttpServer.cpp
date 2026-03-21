@@ -6,15 +6,45 @@
 #include <cstdlib>
 
 #include "router/ChatRouter.h"
+#include "router/DebugRouter.h"
+#include "router/InterviewRouter.h"
 #include "router/LoginRouter.h"
 #include "router/SettingRouter.h"
 #include "service/ChatMySqlStore.h"
+#include "service/MemoryIndexService.h"
 
 #include <jwt-cpp/jwt.h>
+
+static bool getenvTruthy(const char* key) {
+    const char* v = std::getenv(key);
+    if (!v || !*v) return false;
+    if (std::string(v) == "0") return false;
+    if (std::string(v) == "false") return false;
+    return true;
+}
+
+static std::string getenvOr(const char* key, const char* defval) {
+    const char* v = std::getenv(key);
+    if (v && *v) return std::string(v);
+    return std::string(defval ? defval : "");
+}
+
+static size_t getenvSizeOr(const char* key, size_t defval) {
+    const char* v = std::getenv(key);
+    if (!v || !*v) return defval;
+    const long long x = std::atoll(v);
+    if (x <= 0) return defval;
+    return (size_t)x;
+}
 
 static std::string getJwtSecret() {
     const char* v = std::getenv("JWT_SECRET");
     if (v && *v) return std::string(v);
+    static bool warned = false;
+    if (!warned) {
+        warned = true;
+        std::fprintf(stderr, "[Security] JWT_SECRET not set, using dev_secret\n");
+    }
     return "dev_secret";
 }
 
@@ -44,16 +74,21 @@ MyHttpServer::MyHttpServer(int port, int thread_num)
     registerRoutes();
 
     ChatMySqlStore::instance().init();
+    MemoryIndexService::instance().init();
 
     server_.registerHttpService(&service_);
 }
 
 void MyHttpServer::setupMiddleware() {
     service_.Use([](HttpRequest* req, HttpResponse* resp) {
-        resp->SetHeader("Access-Control-Allow-Origin", "*");
+        const std::string allow_origin = getenvOr("CORS_ALLOW_ORIGIN", "*");
+        resp->SetHeader("Access-Control-Allow-Origin", allow_origin);
         resp->SetHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
         resp->SetHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
         resp->SetHeader("Access-Control-Max-Age", "3600");
+        if (getenvTruthy("CORS_ALLOW_CREDENTIALS") && allow_origin != "*") {
+            resp->SetHeader("Access-Control-Allow-Credentials", "true");
+        }
 
         if (req->method == HTTP_OPTIONS) {
             return 204;
@@ -62,7 +97,17 @@ void MyHttpServer::setupMiddleware() {
     });
 
     service_.Use([](HttpRequest* req, HttpResponse* resp) {
-        if (req->path == "/" || req->path == "/login" || req->path == "/health" || req->path.rfind("/assets/", 0) == 0) {
+        const size_t max_body = getenvSizeOr("MAX_BODY_BYTES", 12 * 1024 * 1024);
+        if (req->method != HTTP_GET && req->method != HTTP_OPTIONS) {
+            if (req->body.size() > max_body) {
+                resp->status_code = HTTP_STATUS_PAYLOAD_TOO_LARGE;
+                resp->json = {{"code", 413}, {"msg", "Payload Too Large"}};
+                return 413;
+            }
+        }
+
+        const bool enable_debug = getenvTruthy("ENABLE_DEBUG_ROUTES");
+        if (req->path == "/" || req->path == "/login" || req->path == "/health" || req->path.rfind("/assets/", 0) == 0 || (enable_debug && req->path.rfind("/debug/", 0) == 0)) {
             return HTTP_STATUS_NEXT;
         }
 
@@ -107,7 +152,11 @@ void MyHttpServer::setupMiddleware() {
 void MyHttpServer::registerRoutes() {
     routers_.emplace_back(std::make_unique<LoginRouter>());
     routers_.emplace_back(std::make_unique<ChatRouter>());
+    routers_.emplace_back(std::make_unique<InterviewRouter>());
     routers_.emplace_back(std::make_unique<SettingRouter>());
+    if (getenvTruthy("ENABLE_DEBUG_ROUTES")) {
+        routers_.emplace_back(std::make_unique<DebugRouter>());
+    }
 
     for (auto& router : routers_) {
         router->registerRoutes(service_);

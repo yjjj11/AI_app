@@ -40,6 +40,34 @@ struct chat_session_row {
 REGISTER_AUTO_KEY(chat_session_row, id)
 YLT_REFL(chat_session_row, id, username, session_id, title, created_at_ms)
 
+struct note_row {
+    std::string username;
+    std::string session_id;
+    std::string memory_type;
+    std::string title;
+    std::string content_json;
+    std::string tags_json;
+    int64_t source_last_message_id;
+    int64_t created_at_ms;
+    int64_t id;
+    static constexpr std::string_view get_alias_struct_name(note_row*) { return "notes"; }
+};
+REGISTER_AUTO_KEY(note_row, id)
+YLT_REFL(note_row, id, username, session_id, memory_type, title, content_json, tags_json, source_last_message_id, created_at_ms)
+
+struct note_chunk_row {
+    int64_t note_id;
+    int32_t chunk_index;
+    std::string text;
+    std::string text_hash;
+    int64_t qdrant_point_id;
+    int64_t created_at_ms;
+    int64_t id;
+    static constexpr std::string_view get_alias_struct_name(note_chunk_row*) { return "note_chunks"; }
+};
+REGISTER_AUTO_KEY(note_chunk_row, id)
+YLT_REFL(note_chunk_row, id, note_id, chunk_index, text, text_hash, qdrant_point_id, created_at_ms)
+
 inline int64_t chat_now_ms() {
     return std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::system_clock::now().time_since_epoch()

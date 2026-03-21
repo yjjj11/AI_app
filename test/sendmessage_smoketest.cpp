@@ -5,7 +5,18 @@
 
 int main() {
     if (!LLMFactory::loadProfilesFromFile("/root/my_ai_app/config/llm_profiles.json")) {
-        std::cout << "profiles_file_missing=true\n";
+        LLMFactory::loadProfilesFromFile("/root/my_ai_app/config/llm_profiles.json.template");
+    }
+    bool has_key = false;
+    for (const auto& p : LLMFactory::listProfiles()) {
+        if (!p.api_key.empty() && !p.base_url.empty()) {
+            has_key = true;
+            break;
+        }
+    }
+    if (!has_key) {
+        std::cout << "skipped=true\n";
+        std::cout << "reason=llm api key missing\n";
         return 0;
     }
 

@@ -1,0 +1,15 @@
+{
+  "active_key": "default",
+  "profiles": [
+    {
+      "key": "default",
+      "provider": "dashscope-compatible",
+      "api_key": "",
+      "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
+      "default_model": "qwen-plus",
+      "timeout_seconds": 30,
+      "capabilities": { "vision": false, "audio": false, "files": false }
+    }
+  ]
+}
+

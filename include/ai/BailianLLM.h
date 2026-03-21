@@ -17,6 +17,9 @@ private:
     std::string base_url_;
     std::string default_model_;
     int timeout_seconds_{30};
+
+    std::vector<std::string> short_memory_;
+    std::vector<std::string> long_memory_;
 };
 
 #endif

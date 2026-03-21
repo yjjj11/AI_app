@@ -14,6 +14,9 @@ public:
     bool deleteSession(const std::string& username, const std::string& sessionId);
     std::vector<chat_session_row> listSessions(const std::string& username, int limit);
     std::vector<chat_message_row> getHistory(const std::string& username, const std::string& sessionId, int limit, int offset);
+    int countMessages(const std::string& username, const std::string& sessionId);
+    int64_t maxMessageId(const std::string& username, const std::string& sessionId);
+    std::vector<chat_message_row> getTailHistory(const std::string& username, const std::string& sessionId, int limit);
 
     std::string streamMessage(const std::string& question,
                               const std::vector<std::string>& imageDataUrls,

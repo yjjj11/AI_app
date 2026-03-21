@@ -1,5 +1,6 @@
 #include "router/ChatRouter.h"
 #include "service/ChatMySqlStore.h"
+#include "service/MemoryIndexService.h"
 #include "ai/LLMFactory.h"
 
 #include <chrono>
@@ -147,7 +148,6 @@ void ChatRouter::registerRoutes(hv::HttpService& service) {
             ts_user,
             sessionId
         });
-
         std::string aggregated;
         const std::string out = chat_service_.streamMessage(
             question,
@@ -178,6 +178,7 @@ void ChatRouter::registerRoutes(hv::HttpService& service) {
             ts_ai,
             sessionId
         });
+        MemoryIndexService::instance().maybeEnqueue(username, sessionId);
 
         hv::Json payload;
         payload["done"] = true;

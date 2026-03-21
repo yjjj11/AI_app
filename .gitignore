@@ -2,15 +2,7 @@ build/
 bin/
 compile_commands.json
 
-.cache/
-*.log
+config/*.env
+config/agent.config
+config/llm_profiles.json
 
-.vscode/
-.idea/
-.DS_Store
-
-config/*
-!config/*.template
-
-
-third_party/**/.git/

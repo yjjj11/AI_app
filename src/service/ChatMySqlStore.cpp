@@ -76,6 +76,8 @@ void ChatMySqlStore::init() {
              std::cout << "[ChatMySqlStore] MySQL连接成功！" << std::endl;
             auto res1=conn->create_datatable<chat_session_row>(ormpp_auto_key{"id"});
             auto res2=conn->create_datatable<chat_message_row>(ormpp_auto_key{"id"});
+            auto res3=conn->create_datatable<note_row>(ormpp_auto_key{"id"});
+            auto res4=conn->create_datatable<note_chunk_row>(ormpp_auto_key{"id"});
         }
 
         startWorker();

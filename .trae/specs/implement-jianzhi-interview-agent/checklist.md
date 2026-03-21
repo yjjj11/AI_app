@@ -1,0 +1,12 @@
+- [x] 已提供 `config/agent.config` 配置项定义与读取优先级（env > file > default）
+- [x] EmbeddingClient 可调用 OpenAI 兼容 `/v1/embeddings` 并支持批量与 dimensions
+- [x] 默认 embedding 模型策略已落地（优先复用百炼/DashScope key；否则独立 key）
+- [x] QdrantClient 支持鉴权 header、upsert/search，且能处理超时与错误返回
+- [x] Qdrant collection 的 vector_size 与 distance 校验/初始化可用（不匹配会报错）
+- [x] notes/note_chunks 表创建完成，且不会影响现有 chat_* 表
+- [x] 历史消息数 > 100 时可触发：结构化笔记生成 → 分块 → embedding → Qdrant upsert（异步）
+- [x] 检索增强可用：query 向量化后按 session_id + memory_type 过滤召回 topK 并注入上下文
+- [x] “渐知面试官”最小闭环 API 可用：JD 解析、题单生成、模拟面试（SSE）、复盘输出
+- [x] SSE 单连接稳定推送 N 分钟无断流的验证脚本/口径已提供
+- [x] 检索召回命中率提升 X% 的评估口径与最小标注/AB 流程已提供
+- [x] README 已更新：新增面试业务说明、agent.config 配置说明、密钥配置提醒（不包含明文）

@@ -3,6 +3,15 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <cstdlib>
+
+static bool getenvTruthy2(const char* key) {
+    const char* v = std::getenv(key);
+    if (!v || !*v) return false;
+    if (std::string(v) == "0") return false;
+    if (std::string(v) == "false") return false;
+    return true;
+}
 
 static std::string readTextFile(const std::string& path) {
     std::ifstream in(path, std::ios::in | std::ios::binary);
@@ -47,7 +56,9 @@ void LoginRouter::registerRoutes(hv::HttpService& service) {
             return 400;
         }
 
-        resp->SetHeader("Set-Cookie", "token=" + token + "; Path=/; HttpOnly; SameSite=Lax");
+        std::string cookie = "token=" + token + "; Path=/; HttpOnly; SameSite=Lax";
+        if (getenvTruthy2("COOKIE_SECURE")) cookie += "; Secure";
+        resp->SetHeader("Set-Cookie", cookie);
         const std::string ct = req->GetHeader("Content-Type");
         if (ct.find("application/json") != std::string::npos) {
             resp->json = {{"success", true}, {"redirect", "/ai.html"}};

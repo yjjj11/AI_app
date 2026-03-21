@@ -26,8 +26,7 @@ static std::string preview(const std::string& s, size_t n) {
 
 int main() {
     if (!LLMFactory::loadProfilesFromFile("/root/my_ai_app/config/llm_profiles.json")) {
-        std::cout << "profiles_file_missing=true\n";
-        return 0;
+        LLMFactory::loadProfilesFromFile("/root/my_ai_app/config/llm_profiles.json.template");
     }
 
     const std::string custom_model = firstNonEmpty({
